@@ -1,0 +1,197 @@
+class App extends React.Component {
+   constructor(props) {
+      super(props);
+      this.state = { table: {},
+                    size: null,
+                    intervalId: null,
+                    speed: 500,
+                    generation: 0,
+                    tableWidth: null,
+                    cellWidth: null
+                   };
+      this.changeColor = this.changeColor.bind(this);
+      this.deadOrAlive = this.deadOrAlive.bind(this);
+      this.getDirections = this.getDirections.bind(this);
+      this.makeTable = this.makeTable.bind(this);
+      this.setInitPattern = this.setInitPattern.bind(this);
+      this.runGame = this.runGame.bind(this);
+      this.stopGame = this.stopGame.bind(this);
+      this.changeSpeed = this.changeSpeed.bind(this);
+      this.resumeGame = this.resumeGame.bind(this);
+      this.clear = this.clear.bind(this);
+      this.changeSize = this.changeSize.bind(this);
+   }
+   
+   makeTable(size, clear) {
+      let filter = 0.5;
+      if (arguments[1] == 'clear') filter = 0;
+      if (!Number.isInteger(size)) throw new Error('Table size must be an integer');
+      let state = {...this.state};
+      for (let i = 0; i < size ** 2; i++) {
+         state.table[i] = Math.random() < filter ? true : false;
+      }
+      this.setState({ state });
+   }
+   
+   getDirections(cell) {
+      const state = {...this.state};
+      const size = this.state.size;
+      const isLeftEdgeCell = cell % size == 0;
+      const isRightEdgeCell = (cell + 1) % size == 0;
+      return {
+         nw: isLeftEdgeCell ? -1 : (cell - size - 1),
+         n: cell - size,
+         ne: isRightEdgeCell ? -1 : cell - size + 1,
+         w: isLeftEdgeCell ? -1 : cell - 1,
+         e: isRightEdgeCell ? -1 : cell + 1,
+         sw: isLeftEdgeCell ? -1 : cell + size - 1,
+         s: cell + size,
+         se: isRightEdgeCell ? -1 : cell + size + 1     
+      }
+   }
+   
+   deadOrAlive() {
+      this.setState({ generation: this.state.generation + 1 });
+      let state = {...this.state};
+      let tableKeys = Object.keys(state.table);
+      tableKeys = tableKeys.map((c, i) => {
+         const dir = this.getDirections(i);
+         let numOfNeighbors = 0;
+         if (state.table[dir.nw]) numOfNeighbors++;     
+         if (state.table[dir.n]) numOfNeighbors++;
+         if (state.table[dir.ne]) numOfNeighbors++;
+         if (state.table[dir.w]) numOfNeighbors++;
+         if (state.table[dir.e]) numOfNeighbors++;
+         if (state.table[dir.sw]) numOfNeighbors++;
+         if (state.table[dir.s]) numOfNeighbors++;
+         if (state.table[dir.se]) numOfNeighbors++;
+         return numOfNeighbors;
+      });
+      tableKeys.forEach((key, i) => {
+         if (key > 3) state.table[i] = false;
+         else if (key === 3) state.table[i] = true;
+         else if (key === 2) state.table[i] = state.table[i] ? true : false;
+         else if (key < 2) state.table[i] = false;
+      });
+      this.setState({ state });
+   }
+
+   runGame(milSec) {
+      const game = setInterval(this.deadOrAlive, milSec);
+      this.setState({ intervalId: game });
+   }
+   
+   resumeGame() {
+      this.runGame(this.state.speed);
+   }
+   
+   stopGame() {
+      clearInterval(this.state.intervalId);
+      this.setState({ intervalId: null });
+   }
+   
+   clear() {
+      this.stopGame();
+      this.makeTable(this.state.size, 'clear');
+   }
+   
+   changeSpeed(e) {
+      this.setState({ speed: e.target.value });
+      this.stopGame();
+      this.runGame(this.state.speed);
+   }
+   
+   changeSize(e) {
+      this.setState({ size: Number(e.target.value) });
+      this.setState({ tableWidth: this.state.cellWidth * e.target.value });
+      this.stopGame(); 
+      this.runGame(this.state.speed); 
+      
+   }
+   
+   changeColor(e) {
+      let table = {...this.state.table};
+      const index = e.target.id;
+      table[index] = table[index] ? false : true;
+      this.setState({ table });
+   }
+   
+   setInitPattern() {
+      this.setState({ size: 25, cellWidth: 20 }, () => {
+         this.makeTable(this.state.size)
+         this.setState({ tableWidth: this.state.cellWidth * 25 });
+      });   
+   }
+   
+   componentWillMount() {
+      this.setInitPattern();
+      this.runGame(this.state.speed);
+   }
+   
+   render() {
+      return (
+         <div className='container'>
+            <Info generation={this.state.generation}/>
+            <Table size={this.state.size} table={this.state.table} changeColor={this.changeColor} tableWidth={this.state.tableWidth}/>
+            <Controls stopGame={this.stopGame} changeSpeed={this.changeSpeed} speed={this.state.speed} changeSize={this.changeSize} resumeGame={this.resumeGame} intervalId={this.state.intervalId} clear={this.clear} size={this.state.size}/>
+         </div>
+      );
+   }
+}
+
+const Table = (props) => {
+   const size = props.size;
+   const table = props.table;
+   function dummy(row) { 
+      let aspectRatio = 0;
+      if (arguments[0] == 'row') aspectRatio = Math.ceil(size * (3 / 5));
+      else aspectRatio = size;
+      let dummy = new Array(aspectRatio);
+      for (let i = 0; i < aspectRatio; i++) dummy[i] = null;
+      return dummy;
+   };
+    return (
+       <div className='table' style={{width: props.tableWidth}}>
+          {dummy('row').map((e, i) => {
+             const row = i;
+             return (
+                <tr>
+                   {dummy().map((e, i) => {
+                      const id = row * size + i;
+                      return (
+                         <td id={id} 
+                            className={'cell' + (table[id] ? ' active' : '')} 
+                            onClick={props.changeColor} >
+                         </td>);
+                    })
+                   }
+                </tr>);
+           }) 
+          }
+      </div>);
+}
+
+const Controls = (props) => {
+   return (
+      <div className='controls'>
+         <button className='stop' type='button' onClick={props.intervalId ? props.stopGame : props.resumeGame}>{props.intervalId ? 'Stop' : 'Resume'}</button>&nbsp;
+         <button className='clear' type='button' onClick={props.clear}>Clear</button>&nbsp;
+         <input className='speed' type='range' min='1' max='1000' value={props.speed} onChange={props.changeSpeed} />Speed&nbsp;
+         <select className='size' onChange={props.changeSize}>
+            <option value='15'>Size:15x9</option>
+            <option value='25' selected>Size:25x15</option>
+            <option value='50'>Size:50x30</option>
+         </select>
+         
+      </div>
+   );
+}
+
+const Info = (props) => {
+   return <span>&nbsp;{'Generation: ' + props.generation}</span>
+}
+
+ReactDOM.render(
+   <App />,
+   document.getElementById('app')
+);

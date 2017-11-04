@@ -1,0 +1,45 @@
+$cellWidth: 20px;
+$cellHeight: $cellWidth;
+@mixin cellSize($w: $cellWidth, $h: $cellHeight) {
+   width: $w;
+   height: $h;
+}
+* {
+   box-sizing: border-box;
+   font-family: 'VT323', monospace;
+   font-size: 1.05em;
+}
+.container {
+   margin-top: 1em;
+   text-align: center;
+   width: 100%;
+   min-width: 320px;
+   .table {
+      margin: 0.5em auto 0.5em auto;
+      .cell {
+         border-radius: 50%;
+         text-align: center;
+         @include cellSize;
+         cursor: pointer;  
+         &.active {
+         background: url("https://raw.githubusercontent.com/hongyi0220/cells/master/t-cell.png") no-repeat center;
+         background-size: $cellWidth $cellWidth;
+         }
+      }
+   }
+   .controls {
+      text-align: center;
+      .stop, .clear {
+         border-radius: 5px;
+      }
+      .speed {
+         direction: rtl;
+      }
+   }
+}
+footer {
+   margin-top: 1em;
+   text-align: center;
+   font-family: 'Libre Barcode 39 Text', cursive;
+   font-size: 1.3em;
+}

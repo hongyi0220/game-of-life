@@ -1,0 +1,42 @@
+* {
+  box-sizing: border-box;
+  font-family: 'VT323', monospace;
+  font-size: 1.05em;
+}
+
+.container {
+  margin-top: 1em;
+  text-align: center;
+  width: 100%;
+  min-width: 320px;
+}
+.container .table {
+  margin: 0.5em auto 0.5em auto;
+}
+.container .table .cell {
+  border-radius: 50%;
+  text-align: center;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+.container .table .cell.active {
+  background: url("https://raw.githubusercontent.com/hongyi0220/cells/master/t-cell.png") no-repeat center;
+  background-size: 20px 20px;
+}
+.container .controls {
+  text-align: center;
+}
+.container .controls .stop, .container .controls .clear {
+  border-radius: 5px;
+}
+.container .controls .speed {
+  direction: rtl;
+}
+
+footer {
+  margin-top: 1em;
+  text-align: center;
+  font-family: 'Libre Barcode 39 Text', cursive;
+  font-size: 1.3em;
+}
